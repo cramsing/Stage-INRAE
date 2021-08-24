@@ -4,16 +4,10 @@
 #all this will not be run because the code is too heavy to run each time. 
 #Instead the resulting df is saved as an r file and loaded each time
 # ## Compilation des fichiers csv All_lesions
-# list_files = list.files(full.names = TRUE) # making list of files
-# a=0
-# b = "All_lesions.csv"
-# 
-# #alternative code if files aren't in the same working directory
-# # list_files = list.files(path="D:/Documents/folder/folder/folder", full.names = TRUE)
+# # list_files = list.files(path="E:/Data analysis/12.08.21 all lesions", full.names = TRUE)
 # # a=0
 # # b = "All_lesions.csv"
-# 
-# for( x in list_files) {
+# # for( x in list_files) {
 #   if (grepl(b,x,fixed=TRUE)) {
 #     tmp = read_delim(file = x, delim = "\t")
 #     if (a == 0) {    df = tmp; a=1  }
@@ -55,7 +49,7 @@
 # save(df2, file="df2.RData") #saving just to be sure (and bc the above code is quite annoying to run)
 
 load("df2.RData")
-
+df2 <- df2[d25$lesion.status=="keep",] #only keeps lesions i've approved !
 df2[ , c('genotype', 'mutant_cultivar_date')] <- list(NULL) #deleting redunant columns 
 colnames(df2)
 
@@ -198,7 +192,7 @@ rep1 <- subset(rep1, lesion.surface < 8000) #only keeps data with lesion surface
 #values under 8,000 pixels
 
 
-#save (rep1, file = "rep1.RData") #saving dataframe
+save (rep1, file = "rep1.RData") #saving dataframe
 
 
 ## rep 1  lesion count dataframe---- 

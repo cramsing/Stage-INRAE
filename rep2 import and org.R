@@ -50,6 +50,7 @@ df3$genotype =paste0(df3$mutant, ".",df3$cultivar)
 # # 
 #deleting lesions with 0 size
 df3=df3[df3$lesion.surface>0,]
+df3 <- df3[df3$lesion.status=="keep",] #only keeps lesions i've approved !
 # # 
 # # 
 head(df3)
@@ -191,7 +192,7 @@ rep2 <- subset(rep2, lesion.surface < 8000) #only keeps data with lesion surface
 #values under 8,000 pixels
 
 
-save (rep2, file = "rep2.RData") #saving dataframe
+#save (rep2, file = "rep2.RData") #saving dataframe
 
 ## rep 2 lesion count dataframe ----
 #lesion count df

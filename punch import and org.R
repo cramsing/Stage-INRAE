@@ -47,7 +47,8 @@ df5 = cbind(df4, cs2)
 df5$genotype =paste0(df5$mutant, ".",df5$cultivar)
 # # 
 #deleting lesions with 0 size
-df5=df3[df5$lesion.surface>0,]
+df5=df5[df5$lesion.surface>0,]
+df5 <- df5[df5$lesion.status=="keep",] #only keeps lesions i've approved !
 # # 
 # # 
 head(df5)
@@ -152,20 +153,16 @@ punch <- punch %>%
 #rename misspelled cultivars
 punch$cultivar <- as.factor(punch$cultivar)
 levels(punch$cultivar) # print misspelled cultivar names
-# [1] "AichiAsahhi" "AichiAsahi"  "AichiAsahih" "Bl1"
-#"K60"         "Kasalath"    "Kasalth"     "Nipponbare" 
-# [9] "Shin2"       "Tsuyake"     "Tsuyuake" 
+# [1] "Aichi Asahi"  "Aichi Asashi" "Aishi Asahi"  "Bl1"  "K60"  "Kasalath"   
+# "Nipponbare" "Shin2" 
 library(dplyr)
 punch <- punch %>% 
   mutate(cultivar = recode(cultivar,
-                           'AichiAsahhi' = 'Aichi Asahi',
-                           'AichiAsahi' = 'Aichi Asahi',
-                           'AichiAsahih' = 'Aichi Asahi',
-                           'Kasalth' = 'Kasalath',
-                           'Shin2' = 'Shin 2',
-                           'Tsuyake' = 'Tsuyuake'))
+                           'Aichi Asashi' = 'Aichi Asahi',
+                           'Aishi Asahi' = 'Aichi Asahi'))
+
 levels(punch$cultivar) #verify names
-# "Aichi Asahi" "Bl1"  "K60"   "Kasalath"  "Nipponbare" "Shin 2"   "Tsuyuake"   
+# "Aichi Asahi" "Bl1"  "K60"   "Kasalath"  "Nipponbare" "Shin 2"     
 #everything looks correct
 
 punch$rep <- 'punch' #adding column for rep description
@@ -180,11 +177,16 @@ punch <- rename(punch, lesion = lesion.number) #rename column because its not th
 #it's the number OF THE lesion. confusing. 
 
 colnames(punch)
+load("rep1.RData")
 colnames(rep1)#check order of column names against rep1 df
 
-punch <- punch[, c(5, 1,18, 17, 2, 19, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)] 
+punch <- punch[, c(5, 1, 18, 17, 2, 19, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)] 
 
 colnames(punch)
-colnames(rep1)#re-check order of column names against rep1 df
+
+punch <- na.omit(punch)
+
+
+
 
 save(punch, file = "punch.RData") #savedf
