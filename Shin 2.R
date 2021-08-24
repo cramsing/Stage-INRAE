@@ -117,7 +117,6 @@ kruskal.test(lesion.surface ~ mutant, data = S.p)
 
 
 #Post-hoc 
-
 #post-hoc test Dunn
 library(FSA)
 dunnTest(lesion.surface ~ mutant, data = S.p, method ="bh")
