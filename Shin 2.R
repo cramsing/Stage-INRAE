@@ -127,62 +127,144 @@ S.p.w <- compare_means(lesion.surface ~ mutant, data = S.p, method="wilcox.test"
                         ref.group = ".all.") #issue with this code, will come back to it
 S.p.w
 
+
+## Compiled kruskal groups ----
+SF <- dplyr::filter(S, isolate == "FR13")
+SG <- dplyr::filter(S, isolate == "Guy11")
+#lesion surface kruskal groups
+library(agricolae)
+library(dplyr)
+S.f.ls.groups <- kruskal(SF$lesion.surface,
+                          SF$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("S.f.ls.groups" = "groups")
+S.f.ls.groups$`SF$lesion.surface` <- NULL
+S.g.ls.groups <- kruskal(SG$lesion.surface,
+                          SG$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("S.g.ls.groups" = "groups")
+S.g.ls.groups$`SG$lesion.surface` <- NULL
+
+
+#lesion count kruskal groups
+SFlc <- dplyr::filter(Slc, isolate == "FR13")
+SGlc <- dplyr::filter(Slc, isolate == "Guy11")
+library(agricolae)
+library(dplyr)
+S.f.lc.groups <- kruskal(SFlc$lesion.count,
+                          SFlc$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("S.f.lc.groups" = "groups")
+S.f.lc.groups$`SFlc$lesion.count`<- NULL
+S.g.lc.groups <- kruskal(SGlc$lesion.count,
+                          SGlc$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("S.g.lc.groups" = "groups")
+S.g.lc.groups$`SGlc$lesion.count` <- NULL
+
+#punch inoculation kruskal groups
+
+SFp <- dplyr::filter(S.p, isolate == "FR13")
+SGp <- dplyr::filter(S.p, isolate == "Guy11")
+library(agricolae)
+library(dplyr)
+S.f.p.groups <- kruskal(SFp$lesion.surface,
+                         SFp$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("S.f.p.groups" = "groups")
+S.f.p.groups$`SFp$lesion.surface`<- NULL
+S.g.p.groups <- kruskal(SGp$lesion.surface,
+                         SGp$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("S.g.p.groups" = "groups")
+S.g.p.groups$`SGp$lesion.surface` <- NULL
+
+#compilation
+library(dplyr)
+S.f.groups <- dplyr::left_join(S.f.ls.groups, S.f.lc.groups, by = "mutant") %>%
+  left_join(., S.f.p.groups, by = "mutant" )
+S.f.groups <- S.f.groups[order(S.f.groups$mutant),]
+write.csv2(S.f.groups, file = "S.f.groups.csv")
+S.g.groups <- dplyr::left_join(S.g.ls.groups, S.g.lc.groups, by = "mutant") %>%
+  left_join(., S.g.p.groups, by = "mutant" )
+S.g.groups <- S.g.groups[order(S.g.groups$mutant),] 
+write.csv2(S.g.groups, file = "S.g.groups.csv")
+
+
 # Ggplots ----
 
 #ggplot lesion size
+
+library(ggplot2)
 SF <- dplyr::filter(S, isolate == "FR13")
 SG <- dplyr::filter(S, isolate == "Guy11")
 library(ggpubr)
-Sf.ls.p <- ggplot(SF,aes(x=factor(mutant), y=lesion.surface, color = effector)) + geom_boxplot() + 
-  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev) + 
-  facet_grid(~rep)
+Sf.ls.p <- ggplot(SF,aes(x=factor(mutant), y=lesion.surface, color = effector)) +  
+  geom_boxplot(color = "darkslategray") + 
+  geom_jitter(aes(size = lesion.surface, shape = rep), show.legend = TRUE) +
+  scale_size_continuous(range = c(0.05, 1.5)) + theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10") 
 SF.ls.plot <- Sf.ls.p +
-  labs(title = "FR13 lesion surface", x = "Mutant", y = "Lesion surface (in pixels)") +
+  labs(title = "FR13 lesion surface", x = "Mutant", y = "Lesion size (in log10 pixels)") +
   # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                    ref.group = ".all.", hide.ns = TRUE) 
-Sg.ls.p <- ggplot(SG,aes(x=factor(mutant), y=lesion.surface, color = effector)) + geom_boxplot() + 
-  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev) +
-  facet_grid(~rep)
+Sg.ls.p <- ggplot(SG,aes(x=factor(mutant), y=lesion.surface, color = effector)) +
+  geom_boxplot(color = "darkslategray") + 
+  geom_jitter(aes(size = lesion.surface, shape = rep), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.05, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) +
+  scale_y_continuous(trans = "log10") 
 SG.ls.plot <- Sg.ls.p +
-  labs(title = "Guy11 lesion surface", x = "Mutant", y = "Lesion surface (in pixels)") +   
+  labs(title = "Guy11 lesion surface", x = "Mutant", y = "Lesion size (in log10 pixels)") +   
   #theme(axis.title.y = element_blank()) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0))   
-library(patchwork)
-Slsplot <- (SF.ls.plot / SG.ls.plot) + plot_annotation(
-  title = 'Lesion surface on Shin 2')
-Slsplot
-ggsave(filename = "Sls.png", plot = Slsplot, device = "png", height = 20, width = 30,
-       units = "cm", dpi = 500)
+# library(patchwork)
+# Slsplot <- (SF.ls.plot / SG.ls.plot) + plot_annotation(
+#   title = 'Lesion surface on Shin 2')
+# Slsplot
+# ggsave(filename = "Sls.png", plot = Slsplot, device = "png", height = 20, width = 30,
+#        units = "cm", dpi = 500)
 
 #ggplot lesion number
 SFlc <- dplyr::filter(Slc, isolate == "FR13")
 SGlc <- dplyr::filter(Slc, isolate == "Guy11")
 library(ggpubr)
 Sf.lc0 <- ggplot(SFlc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot() + geom_jitter() + theme_minimal() + scale_x_discrete(limits=rev) +
-  facet_grid(~rep)
-SFlc <- Sf.lc0 +
+  geom_boxplot(color = "darkslategray") + geom_jitter(size=1.0, aes(shape = rep.x)) + 
+  scale_x_discrete(limits=rev) + theme_minimal()
+Sflc <- Sf.lc0 +
   labs(title = "FR13 lesion number", x = "Mutant", y = "Lesion number") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # + stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                      ref.group = ".all.", hide.ns = TRUE, label.y = c(40, 60, 200, 30,30)) 
 Sg.lc0 <- ggplot(SGlc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot() + geom_jitter() + theme_minimal() + scale_x_discrete(limits=rev) +
-  facet_grid(~rep)
+  geom_boxplot(color = "darkslategray") + geom_jitter(size=1.0, aes(shape = rep.x)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) 
 Sglc <- Sg.lc0 +
   labs(title = "Guy11 lesion number", x = "Mutant", y = "Lesion number") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # + stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                      ref.group = ".all.", hide.ns = TRUE, label.y = c(125, 170, 170, 30,30)) 
+# library(patchwork)
+# Slcplot <- (SFlc / Sglc) + plot_annotation(
+#   title = 'Lesion number on Shin 2')
+# Slcplot
+# ggsave(filename = "Slc.png", plot = Slcplot, device = "png", height = 20, width = 30,
+#        units = "cm", dpi = 500)
+
+
 library(patchwork)
-Slcplot <- (SFlc / Sglc) + plot_annotation(
-  title = 'Lesion number on Shin 2')
-Slcplot
-ggsave(filename = "Slc.png", plot = Slcplot, device = "png", height = 20, width = 30,
+Splot <- ((SF.ls.plot + Sflc) / (SG.ls.plot + Sglc)) + plot_annotation(
+  title = 'Lesion size and count on Shin 2', tag_levels = 'A') 
+Splot
+ggsave(filename = "S.png", plot = Splot, device = "png", height = 20, width = 40,
        units = "cm", dpi = 500)
 
 

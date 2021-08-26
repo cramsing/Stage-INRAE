@@ -90,8 +90,8 @@ lc <- lc %>%
 save (lc, file = "lc.RData")
 
 # Sep by cultivar ----
-load(spray.RData)
-load(lc.RData)
+load("spray.RData")
+load("lc.RData")
 
 #spray for each cultivar
 A <- spray[spray$cultivar=="Aichi Asahi",] ; titre <- "Aichi Asahi"

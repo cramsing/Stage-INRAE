@@ -129,29 +129,80 @@ A.p.w <- compare_means(lesion.surface ~ mutant, data = A.p, method="wilcox.test"
                         ref.group = ".all.") #issue with this code, will come back to it
 A.p.w
 
+## Compiled kruskal groups ----
+#lesion surface kruskal groups
+library(agricolae)
+library(dplyr)
+A.ls.groups <- kruskal(A$lesion.surface,
+                         A$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("A.ls.groups" = "groups")
+A.ls.groups$`A$lesion.surface` <- NULL
+#lesion count kruskal groups
+A.lc.groups <- kruskal(Alc$lesion.count,
+                         Alc$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("A.lc.groups" = "groups")
+A.lc.groups$`Alc$lesion.count`<- NULL
+#punch
+A.p.groups <- kruskal(A.p$lesion.surface,
+                         A.p$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("A.p.groups" = "groups")
+A.p.groups$`A.p$lesion.surface`<- NULL
+#compilation
+library(dplyr)
+A.groups <- dplyr::left_join(A.ls.groups, A.lc.groups, by = "mutant")%>%
+left_join(., A.p.groups, by = "mutant" )
+A.groups <- A.groups[order(A.groups$mutant),]
+write.csv2(A.groups, file = "A.groups.csv")
+
 ### ####Aichi ggplots####
 #ggplot lesion size
 library(ggpubr)
 library(ggplot2)
+#color by jitter
 als0 <- ggplot(A,aes(x=factor(mutant), y=lesion.surface, color = effector)) + 
-  geom_boxplot() + geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) + facet_grid(~rep)
+  geom_boxplot(color = "darkslategray") + 
+  geom_jitter(aes(size = lesion.surface, shape = rep), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.05, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10") 
 Alsplot <- als0 +
-  labs(title = "FR13 lesion size on Aichi Asahi", x = "Mutant", y = "Lesion size") + 
+  labs(title = "FR13 lesion size on Aichi Asahi", x = "Mutant", y = "Lesion size (in log10 pixels)") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                    ref.group = ".all.", hide.ns = TRUE) 
+#color by boxplot
+als0 <- ggplot(A, aes(x=factor(mutant), y=lesion.surface, fill = effector)) + 
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface,color = rep, shape = rep), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10") 
+Alsplot <- als0 + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion size", x = "Mutant", y = "Lesion size (in log10 pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip()
+Alsplot
+ggsave(filename = "A.png", plot = Alsplot, device = "png", height = 15, width = 25,
+       units = "cm", dpi = 500)
+
 
 Alsplot
 #ggplot lesion number
 library(ggpubr)
 alc0 <- ggplot(Alc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot() + geom_jitter() + theme_minimal() + scale_x_discrete(limits=rev) + facet_grid(~rep)
+  geom_boxplot(color = "darkslategray") + geom_jitter(size=1.0, aes(shape = rep.x)) + 
+  theme_minimal() + scale_x_discrete(limits=rev)
 Alcplot <- alc0 +
   labs(title = "FR13 lesion number on Aichi Asahi", x = "Mutant", y = "Lesion number") + 
    theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
   # + stat_compare_means(label = "p.signif", method = "wilcox.test",
   #                    ref.group = ".all.", hide.ns = TRUE, label.y = c(50, 300, 300,350, 50, 50, 60)) 
+
+
 library(patchwork)
 Aplot <- (Alsplot + Alcplot)
 Aplot

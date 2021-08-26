@@ -127,62 +127,140 @@ K.p.w <- compare_means(lesion.surface ~ mutant, data = K.p, method="wilcox.test"
                        ref.group = ".all.") #issue with this code, will come back to it
 K.p.w
 
+
+## Compiled kruskal groups ----
+KF <- dplyr::filter(K, isolate == "FR13")
+KG <- dplyr::filter(K, isolate == "Guy11")
+#lesion surface kruskal groups
+library(agricolae)
+library(dplyr)
+K.f.ls.groups <- kruskal(KF$lesion.surface,
+                          KF$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("K.f.ls.groups" = "groups")
+K.f.ls.groups$`KF$lesion.surface` <- NULL
+K.g.ls.groups <- kruskal(KG$lesion.surface,
+                          KG$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("K.g.ls.groups" = "groups")
+K.g.ls.groups$`KG$lesion.surface` <- NULL
+
+
+#lesion count kruskal groups
+KFlc <- dplyr::filter(Klc, isolate == "FR13")
+KGlc <- dplyr::filter(Klc, isolate == "Guy11")
+library(agricolae)
+library(dplyr)
+K.f.lc.groups <- kruskal(KFlc$lesion.count,
+                          KFlc$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("K.f.lc.groups" = "groups")
+K.f.lc.groups$`KFlc$lesion.count`<- NULL
+K.g.lc.groups <- kruskal(KGlc$lesion.count,
+                          KGlc$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("K.g.lc.groups" = "groups")
+K.g.lc.groups$`KGlc$lesion.count` <- NULL
+
+#punch inoculation kruskal groups
+
+KFp <- dplyr::filter(K.p, isolate == "FR13")
+KGp <- dplyr::filter(K.p, isolate == "Guy11")
+library(agricolae)
+library(dplyr)
+K.f.p.groups <- kruskal(KFp$lesion.surface,
+                         KFp$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("K.f.p.groups" = "groups")
+K.f.p.groups$`KFp$lesion.surface`<- NULL
+K.g.p.groups <- kruskal(KGp$lesion.surface,
+                         KGp$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("K.g.p.groups" = "groups")
+K.g.p.groups$`KGp$lesion.surface` <- NULL
+
+#compilation
+library(dplyr)
+K.f.groups <- dplyr::left_join(K.f.ls.groups, K.f.lc.groups, by = "mutant") %>%
+  left_join(., K.f.p.groups, by = "mutant" )
+K.f.groups <- K.f.groups[order(K.f.groups$mutant),]
+write.csv2(K.f.groups, file = "K.f.groups.csv")
+K.g.groups <- dplyr::left_join(K.g.ls.groups, K.g.lc.groups, by = "mutant") %>%
+  left_join(., K.g.p.groups, by = "mutant" )
+K.g.groups <- K.g.groups[order(K.g.groups$mutant),] 
+write.csv2(K.g.groups, file = "K.g.groups.csv")
+
 # Ggplots ----
 
 #ggplot lesion size
 KF <- dplyr::filter(K, isolate == "FR13")
 KG <- dplyr::filter(K, isolate == "Guy11")
 library(ggpubr)
-Kf.ls.p <- ggplot(KF,aes(x=factor(mutant), y=lesion.surface, color = effector)) + geom_boxplot() + 
-  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev) + 
-  facet_grid(~rep)
+Kf.ls.p <- ggplot(KF,aes(x=factor(mutant), y=lesion.surface, color = effector)) + 
+  geom_boxplot(color = "darkslategray") + 
+  geom_jitter(aes(size = lesion.surface, shape = rep), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10") 
 KF.ls.plot <- Kf.ls.p +
-  labs(title = "FR13 lesion surface", x = "Mutant", y = "Lesion surface (in pixels)") +
+  labs(title = "FR13 lesion surface", x = "Mutant", y = "Lesion size (in log10 pixels)") +
   # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                    ref.group = ".all.", hide.ns = TRUE) 
-Kg.ls.p <- ggplot(KG,aes(x=factor(mutant), y=lesion.surface, color = effector)) + geom_boxplot() + 
-  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev) +
-  facet_grid(~rep)
+Kg.ls.p <- ggplot(KG,aes(x=factor(mutant), y=lesion.surface, color = effector)) + 
+  geom_boxplot(color = "darkslategray") + 
+  geom_jitter(aes(size = lesion.surface, shape = rep), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10") 
 KG.ls.plot <- Kg.ls.p +
-  labs(title = "Guy11 lesion surface", x = "Mutant", y = "Lesion surface (in pixels)") +   
+  labs(title = "Guy11 lesion surface", x = "Mutant", y = "Lesion size (in log10 pixels)") +   
   #theme(axis.title.y = element_blank()) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0))   
-library(patchwork)
-Klsplot <- (KF.ls.plot / KG.ls.plot) + plot_annotation(
-  title = 'Lesion surface on Kasalath')
-Klsplot
-ggsave(filename = "Kls.png", plot = Klsplot, device = "png", height = 20, width = 30,
-       units = "cm", dpi = 500)
+# library(patchwork)
+# Klsplot <- (KF.ls.plot / KG.ls.plot) + plot_annotation(
+#   title = 'Lesion surface on Kasalath')
+# Klsplot
+# ggsave(filename = "Kls.png", plot = Klsplot, device = "png", height = 20, width = 30,
+#        units = "cm", dpi = 500)
 
 #ggplot lesion number
 KFlc <- dplyr::filter(Klc, isolate == "FR13")
 KGlc <- dplyr::filter(Klc, isolate == "Guy11")
 library(ggpubr)
 kf.lc0 <- ggplot(KFlc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot() + geom_jitter() + theme_minimal() + scale_x_discrete(limits=rev) +
-  facet_grid(~rep)
+  geom_boxplot(color = "darkslategray") + geom_jitter(size=1.0, aes(shape = rep.x)) + 
+  theme_minimal() + scale_x_discrete(limits=rev)
 KFlc <- kf.lc0 +
   labs(title = "FR13 lesion number", x = "Mutant", y = "Lesion number") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # + stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                      ref.group = ".all.", hide.ns = TRUE, label.y = c(40, 60, 200, 30,30)) 
 kg.lc0 <- ggplot(KGlc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot() + geom_jitter() + theme_minimal() + scale_x_discrete(limits=rev) +
-  facet_grid(~rep)
+  geom_boxplot(color = "darkslategray") + geom_jitter(size=1.0, aes(shape = rep.x)) + 
+  theme_minimal() + scale_x_discrete(limits=rev)
 Kglc <- kg.lc0 +
   labs(title = "Guy11 lesion number", x = "Mutant", y = "Lesion number") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # + stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                      ref.group = ".all.", hide.ns = TRUE, label.y = c(125, 170, 170, 30,30)) 
+# library(patchwork)
+# Klcplot <- (KFlc / Kglc) + plot_annotation(
+#   title = 'Lesion number on Kasalath')
+# Klcplot
+# ggsave(filename = "Klc.png", plot = Klcplot, device = "png", height = 20, width = 30,
+#        units = "cm", dpi = 500)
+
 library(patchwork)
-Klcplot <- (KFlc / Kglc) + plot_annotation(
-  title = 'Lesion number on Kasalath')
-Klcplot
-ggsave(filename = "Klc.png", plot = Klcplot, device = "png", height = 20, width = 30,
+Kplot <- ((KF.ls.plot + KFlc) / (KG.ls.plot + Kglc)) + plot_annotation(
+  title = 'Lesion size and count on Kasalath', tag_levels = 'A') 
+Kplot
+ggsave(filename = "K.png", plot = Kplot, device = "png", height = 20, width = 40,
        units = "cm", dpi = 500)
 
 

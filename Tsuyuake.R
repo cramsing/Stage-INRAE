@@ -98,6 +98,28 @@ compare_means(lesion.count ~ mutant, Tlc.2, method="wilcox.test",
               ref.group = ".all.") 
 
 
+## Compiled kruskal groups ----
+#lesion surface kruskal groups
+library(agricolae)
+library(dplyr)
+T.ls.groups <- kruskal(T$lesion.surface,
+                          T$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("T.ls.groups" = "groups")
+T.ls.groups$`T$lesion.surface` <- NULL
+#lesion count kruskal groups
+T.lc.groups <- kruskal(Tlc$lesion.count,
+                          Tlc$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("T..lc.groups" = "groups")
+#compilation
+library(dplyr)
+T.groups <- dplyr::left_join(T.ls.groups, T.lc.groups, by = "mutant") 
+T.groups <- T.groups[order(T.Groups$mutant),]
+write.csv2(T.groups, file = "T.groups.csv")
+
 
 # Ggplots ----
 
@@ -105,10 +127,12 @@ compare_means(lesion.count ~ mutant, Tlc.2, method="wilcox.test",
 library(ggpubr)
 library(ggplot2)
 tls0 <- ggplot(T,aes(x=factor(mutant), y=lesion.surface, color = effector)) + 
-  geom_boxplot() + geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) + facet_grid(~rep)
+  geom_boxplot(color = "darkslategray") + 
+  geom_jitter(aes(size = lesion.surface, shape = rep), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) +
+  scale_y_continuous(trans = "log10") 
 Tlsplot <- tls0 +
-  labs(title = "FR13 lesion size on Tsuyuake", x = "Mutant", y = "Lesion size") + 
+  labs(title = "FR13 lesion size on Tsuyuake", x = "Mutant", y = "Lesion size (in log10 pixels)") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                    ref.group = ".all.", hide.ns = TRUE) 
@@ -117,7 +141,8 @@ Tlsplot
 #ggplot lesion number
 library(ggpubr)
 tlc0 <- ggplot(Tlc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot() + geom_jitter() + theme_minimal() + scale_x_discrete(limits=rev) + facet_grid(~rep)
+  geom_boxplot(color = "darkslategray") + geom_jitter(size=1.0, aes(shape = rep.x)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) 
 Tlcplot <- tlc0 +
   labs(title = "FR13 lesion number on Tsuyuake", x = "Mutant", y = "Lesion number") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
