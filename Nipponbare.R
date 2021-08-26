@@ -126,62 +126,138 @@ N.p.w <- compare_means(lesion.surface ~ mutant, data = N.p, method="wilcox.test"
                         ref.group = ".all.") #issue with this code, will come back to it
 N.p.w
 
+## Compiled kruskal groups ----
+NF <- dplyr::filter(N, isolate == "FR13")
+NG <- dplyr::filter(N, isolate == "Guy11")
+#lesion surface kruskal groups
+library(agricolae)
+library(dplyr)
+N.f.ls.groups <- kruskal(NF$lesion.surface,
+                          NF$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("N.f.ls.groups" = "groups")
+N.f.ls.groups$`NF$lesion.surface` <- NULL
+N.g.ls.groups <- kruskal(NG$lesion.surface,
+                          NG$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("N.g.ls.groups" = "groups")
+N.g.ls.groups$`NG$lesion.surface` <- NULL
+
+
+#lesion count kruskal groups
+NFlc <- dplyr::filter(Nlc, isolate == "FR13")
+NGlc <- dplyr::filter(Nlc, isolate == "Guy11")
+library(agricolae)
+library(dplyr)
+N.f.lc.groups <- kruskal(NFlc$lesion.count,
+                          NFlc$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("N.f.lc.groups" = "groups")
+N.f.lc.groups$`NFlc$lesion.count`<- NULL
+N.g.lc.groups <- kruskal(NGlc$lesion.count,
+                          NGlc$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("N.g.lc.groups" = "groups")
+N.g.lc.groups$`NGlc$lesion.count` <- NULL
+
+#punch inoculation kruskal groups
+
+NFp <- dplyr::filter(N.p, isolate == "FR13")
+NGp <- dplyr::filter(N.p, isolate == "Guy11")
+library(agricolae)
+library(dplyr)
+N.f.p.groups <- kruskal(NFp$lesion.surface,
+                         NFp$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("N.f.p.groups" = "groups")
+N.f.p.groups$`NFp$lesion.surface`<- NULL
+N.g.p.groups <- kruskal(NGp$lesion.surface,
+                         NGp$mutant, group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("N.g.p.groups" = "groups")
+N.g.p.groups$`NGp$lesion.surface` <- NULL
+
+#compilation
+library(dplyr)
+N.f.groups <- dplyr::left_join(N.f.ls.groups, N.f.lc.groups, by = "mutant") %>%
+  left_join(., N.f.p.groups, by = "mutant" )
+N.f.groups <- N.f.groups[order(N.f.groups$mutant),]
+write.csv2(N.f.groups, file = "N.f.groups.csv")
+N.g.groups <- dplyr::left_join(N.g.ls.groups, N.g.lc.groups, by = "mutant") %>%
+  left_join(., N.g.p.groups, by = "mutant" )
+N.g.groups <- N.g.groups[order(N.g.groups$mutant),] 
+write.csv2(N.g.groups, file = "N.g.groups.csv")
+
 # Ggplots ----
 
 #ggplot lesion size
 NF <- dplyr::filter(N, isolate == "FR13")
 NG <- dplyr::filter(N, isolate == "Guy11")
 library(ggpubr)
-Nf.ls.p <- ggplot(NF,aes(x=factor(mutant), y=lesion.surface, color = effector)) + geom_boxplot() + 
-  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev) + 
-  facet_grid(~rep)
+Nf.ls.p <- ggplot(NF,aes(x=factor(mutant), y=lesion.surface, color = effector)) + 
+  geom_boxplot(color = "darkslategray") + 
+  geom_jitter(aes(size = lesion.surface, shape = rep), show.legend = TRUE) +
+  scale_size_continuous(range = c(0.05, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10") 
 NF.ls.plot <- Nf.ls.p +
-  labs(title = "FR13 lesion surface", x = "Mutant", y = "Lesion surface (in pixels)") +
+  labs(title = "FR13 lesion surface", x = "Mutant", y = "Lesion surface (in log10 pixels)") +
   # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                    ref.group = ".all.", hide.ns = TRUE) 
-Ng.ls.p <- ggplot(NG,aes(x=factor(mutant), y=lesion.surface, color = effector)) + geom_boxplot() + 
-  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev) +
-  facet_grid(~rep)
+Ng.ls.p <- ggplot(NG,aes(x=factor(mutant), y=lesion.surface, color = effector)) + 
+  geom_boxplot(color = "darkslategray") + 
+  geom_jitter(aes(size = lesion.surface, shape = rep), show.legend = TRUE) +
+  scale_size_continuous(range = c(0.05, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) +
+  scale_y_continuous(trans = "log10") 
 NG.ls.plot <- Ng.ls.p +
-  labs(title = "Guy11 lesion surface", x = "Mutant", y = "Lesion surface (in pixels)") +   
+  labs(title = "Guy11 lesion surface", x = "Mutant", y = "Lesion surface (in log10 pixels)") +   
   #theme(axis.title.y = element_blank()) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0))   
-library(patchwork)
-Nlsplot <- (NF.ls.plot / NG.ls.plot) + plot_annotation(
-  title = 'Lesion surface on Nipponbare')
-Nlsplot
-ggsave(filename = "Nls.png", plot = Nlsplot, device = "png", height = 20, width = 30,
-       units = "cm", dpi = 500)
+# library(patchwork)
+# Nlsplot <- (NF.ls.plot / NG.ls.plot) + plot_annotation(
+#   title = 'Lesion surface on Nipponbare')
+# Nlsplot
+# ggsave(filename = "Nls.png", plot = Nlsplot, device = "png", height = 20, width = 30,
+#        units = "cm", dpi = 500)
 
 #ggplot lesion number
 NFlc <- dplyr::filter(Nlc, isolate == "FR13")
 NGlc <- dplyr::filter(Nlc, isolate == "Guy11")
 library(ggpubr)
 Nf.lc0 <- ggplot(NFlc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot() + geom_jitter() + theme_minimal() + scale_x_discrete(limits=rev) +
-  facet_grid(~rep)
+  geom_boxplot(color = "darkslategray") + geom_jitter(size=1.0, aes(shape = rep.x)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) 
 NFlc <- Nf.lc0 +
   labs(title = "FR13 lesion number", x = "Mutant", y = "Lesion number") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # + stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                      ref.group = ".all.", hide.ns = TRUE, label.y = c(40, 60, 200, 30,30)) 
 Ng.lc0 <- ggplot(NGlc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot() + geom_jitter() + theme_minimal() + scale_x_discrete(limits=rev) +
-  facet_grid(~rep)
+  geom_boxplot(color = "darkslategray") + geom_jitter(size=1.0, aes(shape = rep.x)) + 
+  theme_minimal() + scale_x_discrete(limits=rev)
 Nglc <- Ng.lc0 +
   labs(title = "Guy11 lesion number", x = "Mutant", y = "Lesion number") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 # + stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                      ref.group = ".all.", hide.ns = TRUE, label.y = c(125, 170, 170, 30,30)) 
+# library(patchwork)
+# Nlcplot <- (NFlc / Nglc) + plot_annotation(
+#   title = 'Lesion number on Nipponbare')
+# Nlcplot
+# ggsave(filename = "Nlc.png", plot = Nlcplot, device = "png", height = 20, width = 30,
+#        units = "cm", dpi = 500)
 library(patchwork)
-Nlcplot <- (NFlc / Nglc) + plot_annotation(
-  title = 'Lesion number on Nipponbare')
-Nlcplot
-ggsave(filename = "Nlc.png", plot = Nlcplot, device = "png", height = 20, width = 30,
+Nplot <- ((NF.ls.plot + NFlc) / (NG.ls.plot + Nglc)) + plot_annotation(
+  title = 'Lesion size and count on Nipponbare', tag_levels = 'A') 
+Nplot
+ggsave(filename = "N.png", plot = Nplot, device = "png", height = 20, width = 40,
        units = "cm", dpi = 500)
 
 
