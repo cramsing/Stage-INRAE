@@ -8,8 +8,11 @@
 # install.packages("ggtext")
 # install.packages("ggsci")
 #install.packages("forcats")
+#install.packages("patchwork")
 # 
 # #### Data import #### 
+
+#Rep 1 import 
 #all this will not be run because the code is too heavy to run each time. 
 #Instead the resulting df is saved as an r file and loaded each time
 # ## Compilation des fichiers csv All_lesions
@@ -63,10 +66,6 @@
 # tail(df2)
 # save(df2, file="df2.RData") #saving just to be sure (and bc the above code is quite annoying to run)
 
-
-# #### Dataframe clean up ####
-#install.packages("patchwork")
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 load("df2.RData")
 
 df2[ , c('genotype', 'mutant_cultivar_date')] <- list(NULL) #deleting redunant columns 
@@ -74,6 +73,75 @@ colnames(df2)
 
 rep1 <- df2[, c(16, 17, 18, 19, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)] #reordring columns and puttting in a new df
 #really could've done this and previous deletions in the same step but hey 
+
+
+
+# #Rep 2 import 
+# #all this will not be run because the code is too heavy to run each time. 
+# #Instead the resulting df is saved as an r file and loaded each time
+# # ## Compilation des fichiers csv All_lesions
+#  # list_files = list.files(full.names = TRUE) # making list of files
+#  # a=0
+#  # b = "All_lesions.csv"
+#  
+# # #alternative code if files aren't in the same working directory
+# library(dplyr)
+# library(readr)
+# list_files = list.files(path="E:/results 23.08", full.names = TRUE)
+# a=0
+# b = "All_lesions.csv"
+# 
+# for( x in list_files) {
+#   if (grepl(b,x,fixed=TRUE)) {
+#     tmp = read_delim(file = x, delim = "\t")
+#     if (a == 0) {    df1 = tmp; a=1  }
+#     else {
+#       df1 = bind_rows(df1, tmp)
+#     }
+#   }
+# }
+# 
+# df1
+#  
+# # ## Renaming column names to match file names
+# colnames(df1)
+# names(df1)[names(df1) == "image"] <- "mutant_cultivar"
+# # 
+# # 
+# df1
+# # 
+# # 
+# # ## Separation of cultivar and mutant 
+# df1["mutant_cultivar"] = lapply(df1["mutant_cultivar"],as.character)
+# cs <- strsplit(df1[["mutant_cultivar"]],"_")
+# cs2 <- data.frame(do.call(rbind,cs),stringsAsFactors=FALSE)
+# names(cs2)[names(cs2) == "X1"] <- "mutant"
+# names(cs2)[names(cs2) == "X2"] <- "cultivar"
+# 
+# # 
+# # 
+# df3 = cbind(df1, cs2)
+# # 
+# df3$genotype =paste0(df3$mutant, ".",df3$cultivar)
+# # 
+# #deleting lesions with 0 size
+# df3=df3[df3$lesion.surface>0,]
+# # 
+# # 
+# head(df3)
+# tail(df3)
+# save(df3, file="df3.RData") #saving just to be sure (and bc the above code is quite annoying to run)
+
+load("df3.RData")
+
+df3[ , c('genotype', 'mutant_cultivar_date')] <- list(NULL) #deleting redunant columns 
+colnames(df3)
+
+rep2 <- df3[, c(16, 17, 18, 19, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)] #reordring columns and puttting in a new df
+#really could've done this and previous deletions in the same step but hey 
+
+
+# #### Dataframe clean up ####
 colnames(rep1)
 library(dplyr)
 rep1 <- rename(rep1, sample = mutant_cultivar) #rename column
@@ -299,19 +367,12 @@ lesion.count <- lesion.count %>%
 
 #rep1 for each cultivar
 A <- rep1[rep1$cultivar=="Aichi Asahi",] ; titre <- "Aichi Asahi"
-#save (A, file = "A.RData")
 B <- rep1[rep1$cultivar=="Bl1",] ; titre <- "Bl1"
-#save (B, file = "B.RData")
 N <- rep1[rep1$cultivar=="Nipponbare",] ; titre <- "Nipponbare"
-#save (N, file = "N.RData")
 K <- rep1[rep1$cultivar=="Kasalath",] ; titre <- "Kasalath"
-#save (K, file = "K.RData")
 K6 <- rep1[rep1$cultivar=="K60",] ; titre <- "K60"
-#save (K, file = "K6.RData")
 S <- rep1[rep1$cultivar=="Shin 2",] ; titre <- "Shin 2"
-#save (S, file = "S.RData")
 T <- rep1[rep1$cultivar=="Tsuyuake",] ; titre <- "Tsuyuake"
-#save (T, file = "T.RData")
 
 #lesion.count for each cultivar
 Alc <- lesion.count[lesion.count$cultivar =="Aichi Asahi",] ; titre <- "Aichi Asahi"

@@ -16,7 +16,7 @@ Tlc.2 <-dplyr::filter(Tlc, rep == "2") # Blc for rep 2
 #Initial stats lesion surface
 T0 <- aov(lesion.surface ~ mutant, data = T) 
 anova(T0)
-#p-value = 2.5e-07 ***, significant
+#p-value = 3.577e-07 ***, significant
 #normality of residuals check
 #distrubution/normality
 par(mfrow=c(1,2))
@@ -29,12 +29,12 @@ qqline(T0$residuals)
 shapiro.test(T0$residuals)
 #too many entries to run shapiro but clearly anormal
 kruskal.test(lesion.surface ~ mutant, data = T)
-#p-value <2e-16, significant !
+#p-value <2.2e-16, significant !
 
 #Kruskal test with only rep 1
-kruskal.test(lesion.surface ~ mutant, data = T.1) #p-value <2e-16
+kruskal.test(lesion.surface ~ mutant, data = T.1) #p-value <2.2e-16
 #Kruskal test with only rep 2
-kruskal.test(lesion.surface ~ mutant, data = T.2) #p-value 1e-11
+kruskal.test(lesion.surface ~ mutant, data = T.2) #p-value 1.044e-11
 #not the same values for both
 
 #Post-hoc 
@@ -58,7 +58,7 @@ compare_means(lesion.surface ~ mutant, T.2, method="wilcox.test",
 # Lesion number ---- 
 T1 <- aov(lesion.count ~ mutant, data = Tlc) 
 anova(T1)
-#p-value = 0.00049 ***, significant
+#p-value = 0.2113, not significant
 #normality of residuals check
 #distrubution/normality
 par(mfrow=c(1,2))
@@ -69,14 +69,14 @@ qqnorm(T1$residuals)
 qqline(T1$residuals)
 #kind of normal looking
 shapiro.test(T1$residuals)
-#4e-12, not normal
+#0.0001963, slightly not normal
 kruskal.test(lesion.count ~ mutant, data = Tlc)
-#p 1e-05, significant
+#p = 0.1083, not significant
 
 #Kruskal test with only rep 1
-kruskal.test(lesion.count ~ mutant, data = Tlc.1) #p-value <2e-16
+kruskal.test(lesion.count ~ mutant, data = Tlc.1) #p-value  0.01895, not significant
 #Kruskal test with only rep 2
-kruskal.test(lesion.count ~ mutant, data = Tlc.2) #p-value <2e-16
+kruskal.test(lesion.count ~ mutant, data = Tlc.2) #p-value 0.01751, not significant
 #same values for both
 
 #Post-hoc 
@@ -117,7 +117,7 @@ T.lc.groups <- kruskal(Tlc$lesion.count,
 #compilation
 library(dplyr)
 T.groups <- dplyr::left_join(T.ls.groups, T.lc.groups, by = "mutant") 
-T.groups <- T.groups[order(T.Groups$mutant),]
+T.groups <- T.groups[order(T.groups$mutant),]
 write.csv2(T.groups, file = "T.groups.csv")
 
 
@@ -125,31 +125,34 @@ write.csv2(T.groups, file = "T.groups.csv")
 
 #ggplot lesion size
 library(ggpubr)
-library(ggplot2)
-tls0 <- ggplot(T,aes(x=factor(mutant), y=lesion.surface, color = effector)) + 
-  geom_boxplot(color = "darkslategray") + 
-  geom_jitter(aes(size = lesion.surface, shape = rep), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 1.5))  + theme_minimal() + scale_x_discrete(limits=rev) +
-  scale_y_continuous(trans = "log10") 
-Tlsplot <- tls0 +
-  labs(title = "FR13 lesion size on Tsuyuake", x = "Mutant", y = "Lesion size (in log10 pixels)") + 
-  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
-# stat_compare_means(label = "p.signif", method = "wilcox.test",
-#                    ref.group = ".all.", hide.ns = TRUE) 
+t.ls.p <- ggplot(T,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) +   
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))+ theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000))  
+T.ls.plot <- t.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip()
 
-Tlsplot
+ggsave(filename = "Tls.png", plot = T.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+
 #ggplot lesion number
 library(ggpubr)
-tlc0 <- ggplot(Tlc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot(color = "darkslategray") + geom_jitter(size=1.0, aes(shape = rep.x)) + 
-  theme_minimal() + scale_x_discrete(limits=rev) 
-Tlcplot <- tlc0 +
-  labs(title = "FR13 lesion number on Tsuyuake", x = "Mutant", y = "Lesion number") + 
+t.lc0 <- ggplot(Tlc, aes(x=factor(mutant, level = f.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+Tlc <- t.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion number", x = "Isolate", y = "Lesion number") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
-# + stat_compare_means(label = "p.signif", method = "wilcox.test",
-#                    ref.group = ".all.", hide.ns = TRUE, label.y = c(50, 300, 300,350, 50, 50, 60)) 
+
+ggsave(filename = "Tlc.png", plot = Tlc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+
 library(patchwork)
-Tplot <- (Tlsplot + Tlcplot)
-Tplot
-ggsave(filename = "T.png", plot = Tplot, device = "png", height = 15, width = 35,
+Tplot <- (Tlc /T.ls.plot ) + plot_annotation(title = 'FR13 sion size and count on Tsuyuake', tag_levels = 'A') 
+ggsave(filename = "T.png", plot = Tplot, device = "png", height = 25, width = 30,
        units = "cm", dpi = 500)

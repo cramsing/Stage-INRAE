@@ -49,7 +49,7 @@
 # save(df2, file="df2.RData") #saving just to be sure (and bc the above code is quite annoying to run)
 
 load("df2.RData")
-df2 <- df2[d25$lesion.status=="keep",] #only keeps lesions i've approved !
+df2 <- df2[df2$lesion.status=="keep",] #only keeps lesions i've approved !
 df2[ , c('genotype', 'mutant_cultivar_date')] <- list(NULL) #deleting redunant columns 
 colnames(df2)
 
@@ -60,6 +60,7 @@ rep1 <- df2[, c(16, 17, 18, 19, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1
 colnames(rep1)
 library(dplyr)
 rep1 <- rename(rep1, sample = mutant_cultivar) #rename column
+
 colnames(rep1)
 
 
@@ -129,27 +130,27 @@ rep1 <- rep1 %>%
                           '23' = 'Guy11',
                           '24' = 'Guy11')) %>% # grouping isolates
   mutate(mutant = recode(mutant,
-                         '1' = "FA1",
+                         '1' = "mFA1",
                          '2' = "FA ectopic",
-                         '3' = 'FA2',
-                         '4' = 'FA3',
-                         '5' = 'FB1',
-                         '6'= 'FB2',
-                         '7' = 'FB3',
+                         '3' = 'mFA2',
+                         '4' = 'mFA3',
+                         '5' = 'mFB1',
+                         '6'= 'mFB2',
+                         '7' = 'mFB3',
                          '8' = 'FB ectopic',
-                         '9' = 'FK1',
-                         '10' = 'FK2',
-                         '11' = 'FK3',
+                         '9' = 'mFK1',
+                         '10' = 'mFK2',
+                         '11' = 'mFK3',
                          '12' = 'FK ectopic',
                          '13' = 'FR13 RFP',
                          '14' = 'FR13 WT',
-                         '15' = 'GB1',
-                         '16' = 'GB2',
-                         '17' = 'GB3',
+                         '15' = 'mGB1',
+                         '16' = 'mGB2',
+                         '17' = 'mGB3',
                          '18' = 'Guy11 RFP_1',
-                         '19' = 'GK1',
-                         '20' = 'GK2',
-                         '21' = 'GK3',
+                         '19' = 'mGK1',
+                         '20' = 'mGK2',
+                         '21' = 'mGK3',
                          '22' = 'GK ectopic',
                          '23' = 'Guy11 RFP_2',
                          '24' = 'Guy11 WT')) %>% #renaming mutants
@@ -172,8 +173,10 @@ colnames(rep1)
 rep1 <- rep1[, c(6, 1, 19, 18, 2, 20, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)] 
 
 colnames(rep1)
-
-rep1$lesion.status <- NULL 
+#verify only approved lesions
+rep1$lesion.status <- as.factor(rep1$lesion.status)
+levels(rep1$lesion.status)
+#"keep"  #great!
 
 
 

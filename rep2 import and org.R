@@ -126,27 +126,27 @@ rep2 <- rep2 %>%
                           '23' = 'Guy11',
                           '24' = 'Guy11')) %>% # grouping isolates
   mutate(mutant = recode(mutant,
-                         '1' = "FA1",
+                         '1' = "mFA1",
                          '2' = "FA ectopic",
-                         '3' = 'FA2',
-                         '4' = 'FA3',
-                         '5' = 'FB1',
-                         '6'= 'FB2',
-                         '7' = 'FB3',
+                         '3' = 'mFA2',
+                         '4' = 'mFA3',
+                         '5' = 'mFB1',
+                         '6'= 'mFB2',
+                         '7' = 'mFB3',
                          '8' = 'FB ectopic',
-                         '9' = 'FK1',
-                         '10' = 'FK2',
-                         '11' = 'FK3',
+                         '9' = 'mFK1',
+                         '10' = 'mFK2',
+                         '11' = 'mFK3',
                          '12' = 'FK ectopic',
                          '13' = 'FR13 RFP',
                          '14' = 'FR13 WT',
-                         '15' = 'GB1',
-                         '16' = 'GB2',
-                         '17' = 'GB3',
+                         '15' = 'mGB1',
+                         '16' = 'mGB2',
+                         '17' = 'mGB3',
                          '18' = 'Guy11 RFP_1',
-                         '19' = 'GK1',
-                         '20' = 'GK2',
-                         '21' = 'GK3',
+                         '19' = 'mGK1',
+                         '20' = 'mGK2',
+                         '21' = 'mGK3',
                          '22' = 'GK ectopic',
                          '23' = 'Guy11 RFP_2',
                          '24' = 'Guy11 WT')) #renaming mutants
@@ -172,11 +172,10 @@ levels(rep2$cultivar) #verify names
 
 rep2$rep <- 2 #adding column for rep2
 colnames(rep2)
-rep2 <- rep2[, c(7, 1, 20,19, 2, 21, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)] 
+rep2 <- rep2[, c(7, 1, 20,19, 2, 21, 3, 4, 5,6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)] 
 
 #delete superfluous columns
-rep2$sample <- NULL #delete sample column
-rep2$lesion.status <- NULL #delete lesion.status column
+rep2$sample <- NULL #delete sample column 
 rep2$lesion.number.1 <- NULL #delete lesion.number.1 column
 
 
@@ -192,7 +191,7 @@ rep2 <- subset(rep2, lesion.surface < 8000) #only keeps data with lesion surface
 #values under 8,000 pixels
 
 
-#save (rep2, file = "rep2.RData") #saving dataframe
+save (rep2, file = "rep2.RData") #saving dataframe
 
 ## rep 2 lesion count dataframe ----
 #lesion count df

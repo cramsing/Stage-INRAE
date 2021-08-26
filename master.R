@@ -1,5 +1,6 @@
 #Master Inoculation Sheet
-install.packages("xlsx")
+# install.packages("xlsx")
+# install.packages("agricolae")
 
 #Spray compiling ----
 #load replicates
@@ -143,7 +144,7 @@ qqline(a0$residuals)
 shapiro.test(a0$residuals)
 #too many entries to run shapiro but clearly anormal
 kruskal.test(lesion.surface ~ mutant, data = A)
-#p-value <2e-16, significant !
+#p-value < 2.2e-16, significant !
 
 #Post-hoc 
 #post-hoc test Dunn
@@ -177,7 +178,7 @@ qqline(a1$residuals)
 shapiro.test(a1$residuals)
 #5e-09, not normal
 kruskal.test(lesion.count ~ mutant, data = Alc)
-#p =  2e-12, significant
+#p =  < 2.2e-16, significant
 
 #Post-hoc 
 
@@ -276,14 +277,7 @@ shapiro.test(b1$residuals)
 kruskal.test(lesion.count ~ mutant, data = Blc)
 #p <2e-16, significant
 
-#Kruskal test with only rep 1
-kruskal.test(lesion.count ~ mutant, data = Blc.1) #p-value <2e-16
-#Kruskal test with only rep 2
-kruskal.test(lesion.count ~ mutant, data = Blc.2) #p-value <2e-16
-#same values for both
-
 #Post-hoc 
-
 #post-hoc test Dunn
 library(FSA)
 dunnTest(lesion.count ~ mutant, data = Blc, method ="bh")
@@ -372,7 +366,7 @@ K.ls.w
 ### Lesion number ---- 
 k1 <- aov(lesion.count ~ mutant, data = Klc) 
 anova(k1)
-#p-value = <2e-16 ***, significant
+#p-value =< 2.2e-16 ***, significant
 #normality of residuals check
 #distrubution/normality
 par(mfrow=c(1,2))
@@ -802,35 +796,573 @@ write.csv2(p.sig.ls, file = "p.sig.ls.csv")
 # write.xlsx(p.sig.ls, file = "wilcoxon.xlsx",
 #            sheetName = "lesion.surface", append = FALSE)
 
-# Ggplots ---- 
 
+
+
+
+
+# Ggplots ---- 
+#All ggplots
+blue.palette <- c("#f0f9e8","#bae4bc", "#7bccc4","#43a2ca","#0868ac")
+f.level_order <- c("FR13 WT","FR13 RFP" ,"mFA1","mFA2","mFA3","FA ectopic", "mFB1",
+                   "mFB2", "mFB3","FB ectopic", "mFK1","mFK2", "mFK3","FK ectopic")
+g.level_order <- c("Guy11 WT", "Guy11 RFP_1", "Guy11 RFP_2", "mGB1", "mGB2","mGB3",
+                   "mGK1","mGK2","mGK3", "GK ectopic")
 ## Aichi Asahi ----
+A$mutant <- as.factor(A$mutant)
+levels(A$mutant)
+#re-order for plots
+f.level_order <- c("FR13 WT","FR13 RFP" ,"mFA1","mFA2","mFA3","FA ectopic", "mFB1",
+                   "mFB2", "mFB3","FB ectopic", "mFK1","mFK2", "mFK3","FK ectopic")
+
+blue.palette <- c("#f0f9e8","#bae4bc", "#7bccc4","#43a2ca","#0868ac")
 #ggplot lesion size
 library(ggpubr)
 library(ggplot2)
-ap0 <- ggplot(A,aes(x=factor(mutant), y=lesion.surface, color = effector)) + 
-  geom_boxplot() + geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
-  scale_size_continuous(range = c(0.01, 1.5))  + theme_minimal() + facet_grid(~rep)
-Alsplot <- ap0 +
-  labs(title = "FR13 lesion size on Aichi Asahi", x = "Mutant", y = "Lesion size") + 
-  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
-# stat_compare_means(label = "p.signif", method = "wilcox.test",
-#                    ref.group = ".all.", hide.ns = TRUE) 
-
+#color by boxplot
+als0 <- ggplot(A, aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) + 
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface,color = rep, shape = rep), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.1, 2.0))  + theme_minimal() + scale_x_discrete(limits=rev) +
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000)) 
+Alsplot <- als0 + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion size", x = "Isolate", y = "Lesion size (in log10 pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() 
 Alsplot
+
+ggsave(filename = "Als.png", plot = Alsplot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
 #ggplot lesion number
 library(ggpubr)
-alc0 <- ggplot(Alc, aes(x=factor(mutant), y=lesion.count, color = effector)) + 
-  geom_boxplot() + geom_jitter() + theme_minimal() + facet_grid(~rep)
-Alcplot <- alc0 +
-  labs(title = "FR13 lesion number on Aichi Asahi", x = "Mutant", y = "Lesion number") + 
-  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+alc0 <- ggplot(Alc, aes(x=factor(mutant, level = f.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot(color = "darkslategray") + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+Alcplot <- alc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion number on Aichi Asahi", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) + theme(legend.position = "none")
 # + stat_compare_means(label = "p.signif", method = "wilcox.test",
 #                    ref.group = ".all.", hide.ns = TRUE, label.y = c(50, 300, 300,350, 50, 50, 60)) 
+
+
+ggsave(filename = "Alc.png", plot = Alcplot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
 library(patchwork)
-Aplot <- (Alsplot + Alcplot)
-Aplot
-ggsave(filename = "A.png", plot = Aplot, device = "png", height = 8, width = 15,
-       units = "in", dpi = 500)
+Aplot <- ((Alcplot + plot_spacer()) /Alsplot ) + plot_annotation(tag_levels = 'A') 
+ggsave(filename = "A.png", plot = Aplot, device = "png", height = 35, width = 40,
+       units = "cm", dpi = 500)
+#punch inoculation 
+library(ggpubr)
+library(ggplot2)
+ap0 <- ggplot(A.p,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) + 
+  geom_boxplot() + geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 3))  + theme_minimal() 
+A.punch <- ap0 + scale_fill_manual(values = blue.palette) +
+  labs(title = "Punch inoculation lesion surface on Aichi Asahi", x = "Isolate", y = "Lesion size") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+A.punch
+ggsave(filename = "A.punch.png", plot = A.punch, device = "png", height = 15, width = 35,
+       units = "cm", dpi = 500)
 
 ## Bl1 ----
+#ggplot lesion size
+BF <- dplyr::filter(B, isolate == "FR13")
+BG <- dplyr::filter(B, isolate == "Guy11")
+library(ggpubr)
+bf.ls.p <- ggplot(BF,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) +   
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))+ theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000))  
+BF.ls.plot <- bf.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip()
+# stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                    ref.group = ".all.", hide.ns = TRUE) 
+bg.ls.p <- ggplot(BG,aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + 
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))  + theme_minimal() + scale_x_discrete(limits=rev) +
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000)) 
+BG.ls.plot <- bg.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() 
+# library(patchwork)
+# Blsplot <- (BF.ls.plot/BG.ls.plot) + plot_annotation(title = 'Lesion surface on Bl1')
+# Blsplot
+ggsave(filename = "Bfls.png", plot = BF.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "Bgls.png", plot = BG.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+#ggplot lesion number
+BFlc <- dplyr::filter(Blc, isolate == "FR13")
+BGlc <- dplyr::filter(Blc, isolate == "Guy11")
+library(ggpubr)
+bf.lc0 <- ggplot(BFlc, aes(x=factor(mutant, level = f.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+BFlc <- bf.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(40, 60, 200, 30,30)) 
+bg.lc0 <- ggplot(BGlc, aes(x=factor(mutant, level = g.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+Bglc <- bg.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(125, 170, 170, 30,30)) 
+# library(patchwork)
+# Blcplot <- (BFlc / Bglc) + plot_annotation(
+#   title = 'Lesion number on Bl1')
+# Blcplot
+ggsave(filename = "Bflc.png", plot = BFlc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "Bglc.png", plot = Bglc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+# library(patchwork)
+# Bplot <- ((BF.ls.plot + BFlc) / (BG.ls.plot + Bglc)) + plot_annotation(
+#   title = 'Lesion size and count on Bl1', tag_levels = 'A') 
+library(patchwork)
+Bgplot <- ((Bglc + plot_spacer())/BG.ls.plot ) + plot_annotation(title = 'Guy11 lesion size and count on Bl1', tag_levels = 'A') 
+ggsave(filename = "Bg.png", plot = Bgplot, device = "png", height = 25, width = 30,
+       units = "cm", dpi = 500)
+#ggplot punch
+BFp <- dplyr::filter(B.p, isolate == "FR13")
+BGp <- dplyr::filter(B.p, isolate == "Guy11")
+library(ggpubr)
+library(ggplot2)
+bf.p.p <- ggplot(BFp,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+BF.p.plot <- bf.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+bg.p.p <- ggplot(BGp, aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+BG.p.plot <- bg.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))   
+library(patchwork)
+Bpplot <- (BF.p.plot / BG.p.plot) + plot_annotation(
+  title = 'Punch inoculation on Bl1')
+Bpplot
+ggsave(filename = "Bp.png", plot = Bpplot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+# Kasalath ----
+#ggplot lesion size
+kF <- dplyr::filter(k, isolate == "FR13")
+kG <- dplyr::filter(k, isolate == "Guy11")
+library(ggpubr)
+kf.ls.p <- ggplot(kF,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) +   
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))+ theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000))  
+kF.ls.plot <- kf.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip()
+# stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                    ref.group = ".all.", hide.ns = TRUE) 
+kg.ls.p <- ggplot(kG,aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + 
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))  + theme_minimal() + scale_x_discrete(limits=rev) +
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000)) 
+kG.ls.plot <- kg.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() 
+# library(patchwork)
+# klsplot <- (kF.ls.plot/kG.ls.plot) + plot_annotation(title = 'Lesion surface on Kasalath')
+# klsplot
+ggsave(filename = "kfls.png", plot = kF.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "kgls.png", plot = kG.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+#ggplot lesion number
+kFlc <- dplyr::filter(klc, isolate == "FR13")
+kGlc <- dplyr::filter(klc, isolate == "Guy11")
+library(ggpubr)
+kf.lc0 <- ggplot(kFlc, aes(x=factor(mutant, level = f.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+kFlc <- kf.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(40, 60, 200, 30,30)) 
+kg.lc0 <- ggplot(kGlc, aes(x=factor(mutant, level = g.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+kglc <- kg.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(125, 170, 170, 30,30)) 
+# library(patchwork)
+# klcplot <- (kFlc / kglc) + plot_annotation(
+#   title = 'Lesion number on Kasalath')
+# klcplot
+ggsave(filename = "kflc.png", plot = kFlc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "kglc.png", plot = kglc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+# library(patchwork)
+# kplot <- ((kF.ls.plot + kFlc) / (kG.ls.plot + kglc)) + plot_annotation(
+#   title = 'Lesion size and count on Kasalath', tag_levels = 'A') 
+library(patchwork)
+kgplot <- ((kglc + plot_spacer())/kG.ls.plot ) + plot_annotation(title = 'Guy11 lesion size and count on Kasalath', tag_levels = 'A') 
+ggsave(filename = "kg.png", plot = kgplot, device = "png", height = 25, width = 30,
+       units = "cm", dpi = 500)
+#ggplot punch
+kFp <- dplyr::filter(k.p, isolate == "FR13")
+kGp <- dplyr::filter(k.p, isolate == "Guy11")
+library(ggpubr)
+library(ggplot2)
+kf.p.p <- ggplot(kFp,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+kF.p.plot <- kf.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+kg.p.p <- ggplot(kGp, aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+kG.p.plot <- kg.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))   
+library(patchwork)
+kpplot <- (kF.p.plot / kG.p.plot) + plot_annotation(
+  title = 'Punch inoculation on Kasalath')
+kpplot
+ggsave(filename = "kp.png", plot = kpplot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+## K60 ----
+#ggplot lesion size
+K6F <- dplyr::filter(K6, isolate == "FR13")
+K6G <- dplyr::filter(K6, isolate == "Guy11")
+library(ggpubr)
+K6f.ls.p <- ggplot(K6F,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) +   
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))+ theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000))  
+K6F.ls.plot <- K6f.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip()
+# stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                    ref.group = ".all.", hide.ns = TRUE) 
+K6g.ls.p <- ggplot(K6G,aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + 
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))  + theme_minimal() + scale_x_discrete(limits=rev) +
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000)) 
+K6G.ls.plot <- K6g.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() 
+# library(patchwork)
+# K6lsplot <- (K6F.ls.plot/K6G.ls.plot) + plot_annotation(title = 'Lesion surface on k60')
+# K6lsplot
+ggsave(filename = "K6fls.png", plot = K6F.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "K6gls.png", plot = K6G.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+#ggplot lesion number
+K6Flc <- dplyr::filter(K6lc, isolate == "FR13")
+K6Glc <- dplyr::filter(K6lc, isolate == "Guy11")
+library(ggpubr)
+K6f.lc0 <- ggplot(K6Flc, aes(x=factor(mutant, level = f.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+K6Flc <- K6f.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(40, 60, 200, 30,30)) 
+K6g.lc0 <- ggplot(K6Glc, aes(x=factor(mutant, level = g.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+K6glc <- K6g.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(125, 170, 170, 30,30)) 
+# library(patchwork)
+# K6lcplot <- (K6Flc / K6glc) + plot_annotation(
+#   title = 'Lesion number on k60')
+# K6lcplot
+ggsave(filename = "K6flc.png", plot = K6Flc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "K6glc.png", plot = K6glc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+# library(patchwork)
+# K6plot <- ((K6F.ls.plot + K6Flc) / (K6G.ls.plot + K6glc)) + plot_annotation(
+#   title = 'Lesion size and count on K60', tag_levels = 'A') 
+library(patchwork)
+K6gplot <- ((K6glc + plot_spacer())/K6G.ls.plot ) + plot_annotation(title = 'Guy11 lesion size and count on K60', tag_levels = 'A') 
+ggsave(filename = "K6g.png", plot = K6gplot, device = "png", height = 25, width = 30,
+       units = "cm", dpi = 500)
+#ggplot punch
+K6Fp <- dplyr::filter(K6.p, isolate == "FR13")
+K6Gp <- dplyr::filter(K6.p, isolate == "Guy11")
+library(ggpubr)
+library(ggplot2)
+K6f.p.p <- ggplot(K6Fp,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+K6F.p.plot <- K6f.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+K6g.p.p <- ggplot(K6Gp, aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+K6G.p.plot <- K6g.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))   
+library(patchwork)
+K6pplot <- (K6F.p.plot / K6G.p.plot) + plot_annotation(
+  title = 'Punch inoculation on K60')
+K6pplot
+ggsave(filename = "K6p.png", plot = K6pplot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+## Nipponbare ----
+#ggplot lesion size
+NF <- dplyr::filter(N, isolate == "FR13")
+NG <- dplyr::filter(N, isolate == "Guy11")
+library(ggpubr)
+Nf.ls.p <- ggplot(NF,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) +   
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))+ theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000))  
+NF.ls.plot <- Nf.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip()
+# stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                    ref.group = ".all.", hide.ns = TRUE) 
+Ng.ls.p <- ggplot(NG,aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + 
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))  + theme_minimal() + scale_x_discrete(limits=rev) +
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000)) 
+NG.ls.plot <- Ng.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() 
+# library(patchwork)
+# Nlsplot <- (NF.ls.plot/NG.ls.plot) + plot_annotation(title = 'Lesion surface on Nipponbare')
+# Nlsplot
+ggsave(filename = "Nfls.png", plot = NF.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "Ngls.png", plot = NG.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+#ggplot lesion number
+NFlc <- dplyr::filter(Nlc, isolate == "FR13")
+NGlc <- dplyr::filter(Nlc, isolate == "Guy11")
+library(ggpubr)
+Nf.lc0 <- ggplot(NFlc, aes(x=factor(mutant, level = f.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+NFlc <- Nf.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(40, 60, 200, 30,30)) 
+Ng.lc0 <- ggplot(NGlc, aes(x=factor(mutant, level = g.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+Nglc <- Ng.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(125, 170, 170, 30,30)) 
+# library(patchwork)
+# Nlcplot <- (NFlc / Nglc) + plot_annotation(
+#   title = 'Lesion number on Nipponbare')
+# Nlcplot
+ggsave(filename = "Nflc.png", plot = NFlc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "Nglc.png", plot = Nglc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+# library(patchwork)
+# Nplot <- ((NF.ls.plot + NFlc) / (NG.ls.plot + Nglc)) + plot_annotation(
+#   title = 'Lesion size and count on Nipponbare', tag_levels = 'A') 
+library(patchwork)
+Ngplot <- ((Nglc + plot_spacer())/NG.ls.plot ) + plot_annotation(title = 'Guy11 lesion size and count on Nipponbare', tag_levels = 'A') 
+ggsave(filename = "Ng.png", plot = Ngplot, device = "png", height = 25, width = 30,
+       units = "cm", dpi = 500)
+#ggplot punch
+NFp <- dplyr::filter(N.p, isolate == "FR13")
+NGp <- dplyr::filter(N.p, isolate == "Guy11")
+library(ggpubr)
+library(ggplot2)
+Nf.p.p <- ggplot(NFp,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+NF.p.plot <- Nf.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+Ng.p.p <- ggplot(NGp, aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+NG.p.plot <- Ng.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))   
+library(patchwork)
+Npplot <- (NF.p.plot / NG.p.plot) + plot_annotation(
+  title = 'Punch inoculation on Nipponbare')
+Npplot
+ggsave(filename = "Np.png", plot = Npplot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+## Shin 2 ----
+#ggplot lesion size
+SF <- dplyr::filter(S, isolate == "FR13")
+SG <- dplyr::filter(S, isolate == "Guy11")
+library(ggpubr)
+Sf.ls.p <- ggplot(SF,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) +   
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))+ theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000))  
+SF.ls.plot <- Sf.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip()
+# stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                    ref.group = ".all.", hide.ns = TRUE) 
+Sg.ls.p <- ggplot(SG,aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + 
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))  + theme_minimal() + scale_x_discrete(limits=rev) +
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000)) 
+SG.ls.plot <- Sg.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() 
+# library(patchwork)
+# Slsplot <- (SF.ls.plot/SG.ls.plot) + plot_annotation(title = 'Lesion surface on Shin 2')
+# Slsplot
+ggsave(filename = "Sfls.png", plot = SF.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "Sgls.png", plot = SG.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+#ggplot lesion number
+SFlc <- dplyr::filter(Slc, isolate == "FR13")
+SGlc <- dplyr::filter(Slc, isolate == "Guy11")
+library(ggpubr)
+Sf.lc0 <- ggplot(SFlc, aes(x=factor(mutant, level = f.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+SFlc <- Sf.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(40, 60, 200, 30,30)) 
+Sg.lc0 <- ggplot(SGlc, aes(x=factor(mutant, level = g.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+Sglc <- Sg.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+# + stat_compare_means(label = "p.signif", method = "wilcox.test",
+#                      ref.group = ".all.", hide.ns = TRUE, label.y = c(125, 170, 170, 30,30)) 
+# library(patchwork)
+# Slcplot <- (SFlc / Sglc) + plot_annotation(
+#   title = 'Lesion number on Shin 2')
+# Slcplot
+ggsave(filename = "Sflc.png", plot = SFlc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+ggsave(filename = "Sglc.png", plot = Sglc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+# library(patchwork)
+# Splot <- ((SF.ls.plot + SFlc) / (SG.ls.plot + Sglc)) + plot_annotation(
+#   title = 'Lesion size and count on Shin 2', tag_levels = 'A') 
+library(patchwork)
+Sgplot <- ((Sglc + plot_spacer())/SG.ls.plot ) + plot_annotation(title = 'Guy11 lesion size and count on Shin 2', tag_levels = 'A') 
+ggsave(filename = "Sg.png", plot = Sgplot, device = "png", height = 25, width = 30,
+       units = "cm", dpi = 500)
+#ggplot punch
+SFp <- dplyr::filter(S.p, isolate == "FR13")
+SGp <- dplyr::filter(S.p, isolate == "Guy11")
+library(ggpubr)
+library(ggplot2)
+Sf.p.p <- ggplot(SFp,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+SF.p.plot <- Sf.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+Sg.p.p <- ggplot(SGp, aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
+  scale_size_continuous(range = c(0.01, 2))  + theme_minimal() + scale_x_discrete(limits=rev)
+SG.p.plot <- Sg.p.p + scale_fill_manual(values = blue.palette) +
+  labs(title = "Guy11 punch inoculation", x = "Isolate", y = "Lesion surface (in pixels)") +   
+  #theme(axis.title.y = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))   
+library(patchwork)
+Spplot <- (SF.p.plot / SG.p.plot) + plot_annotation(
+  title = 'Punch inoculation on Shin 2')
+Spplot
+ggsave(filename = "Sp.png", plot = Spplot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+## Tsuyuake ----
+#ggplot lesion size
+library(ggpubr)
+t.ls.p <- ggplot(T,aes(x=factor(mutant, level = f.level_order), y=lesion.surface, fill = effector)) +   
+  geom_boxplot() + 
+  geom_jitter(aes(size = lesion.surface, shape = rep, color = rep), show.legend = TRUE) + 
+  scale_size_continuous(range = c(0.1, 2))+ theme_minimal() + scale_x_discrete(limits=rev) + 
+  scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000))  
+T.ls.plot <- t.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion surface", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
+  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip()
+
+ggsave(filename = "Tls.png", plot = T.ls.plot, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+
+#ggplot lesion number
+library(ggpubr)
+t.lc0 <- ggplot(Tlc, aes(x=factor(mutant, level = f.level_order), y=lesion.count, fill = effector)) + 
+  geom_boxplot() + geom_jitter(size=2.0, aes(shape = rep, color = rep)) + 
+  theme_minimal() + scale_x_discrete(limits=rev) + coord_flip()
+Tlc <- t.lc0 +  scale_colour_grey() + scale_fill_manual(values = blue.palette) +
+  labs(title = "FR13 lesion number", x = "Isolate", y = "Lesion number") + 
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
+
+ggsave(filename = "Tlc.png", plot = Tlc, device = "png", height = 20, width = 30,
+       units = "cm", dpi = 500)
+
+
+library(patchwork)
+Tplot <- (Tlc /T.ls.plot ) + plot_annotation(title = 'FR13 sion size and count on Tsuyuake', tag_levels = 'A') 
+ggsave(filename = "T.png", plot = Tplot, device = "png", height = 25, width = 30,
+       units = "cm", dpi = 500)
