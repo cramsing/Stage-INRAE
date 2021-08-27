@@ -209,8 +209,8 @@ ap0 <- ggplot(A.p,aes(x=factor(mutant, level = f.level_order), y=lesion.surface,
   geom_boxplot() + geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
   scale_size_continuous(range = c(0.01, 3))  + theme_minimal() 
 A.punch <- ap0 + scale_fill_manual(values = blue.palette) +
-  labs(title = "Punch inoculation lesion surface on Aichi Asahi", x = "Isolate", y = "Lesion size") + 
+  labs(x = "Isolate", y = "Lesion size") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) 
 A.punch
-ggsave(filename = "A.punch.png", plot = A.punch, device = "png", height = 15, width = 35,
+ggsave(filename = "A.punch.png", plot = A.punch, device = "png", height = 15, width = 20,
        units = "cm", dpi = 500)
