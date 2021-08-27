@@ -113,6 +113,39 @@ qqline(k2$residuals)
 shapiro.test(k2$residuals)
 #0.3, normal, anova stands!
 
+#check for each isolate
+kFp <- dplyr::filter(K.p, isolate == "FR13")
+kGp <- dplyr::filter(K.p, isolate == "Guy11")
+
+k3 <- aov(lesion.surface ~ mutant, data = kFp) 
+anova(k3)
+#p-value = 0.0009117 ***, significant
+#normality of residuals check
+#distrubution/normality
+par(mfrow=c(1,2))
+#Histogramme
+hist(k3$residuals)
+# Q-Q Plot
+qqnorm(k3$residuals)
+qqline(k3$residuals)
+#kind of normal looking
+shapiro.test(k3$residuals)
+# 0.5678, normal, anova stands!
+
+k4 <- aov(lesion.surface ~ mutant, data = kGp) 
+anova(k4)
+#p-value =  1.895e-05 ***, significant
+#normality of residuals check
+#distrubution/normality
+par(mfrow=c(1,2))
+#Histogramme
+hist(k4$residuals)
+# Q-Q Plot
+qqnorm(k4$residuals)
+qqline(k4$residuals)
+#kind of normal looking
+shapiro.test(k4$residuals)
+#0.06516 normal!
 
 
 #Post-hoc 
@@ -168,14 +201,35 @@ K.g.lc.groups$`KGlc$lesion.count` <- NULL
 
 #punch inoculation groups
 # should use t-test bc the data is normal!
+kFp <- dplyr::filter(K.p, isolate == "FR13")
+kGp <- dplyr::filter(K.p, isolate == "Guy11")
+
+k3 <- aov(lesion.surface ~ mutant, data = kFp) 
+anova(k3)
+library(agricolae)
+K.f.p.groups <- HSD.test(k3, "mutant", group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("K.f.p.groups" = "groups")
+K.f.p.groups$lesion.surface<- NULL
+
+k4 <- aov(lesion.surface ~ mutant, data = kGp) 
+anova(k4)
+K.g.p.groups <- HSD.test(k4, "mutant", group = TRUE) %>%
+  .$groups %>%
+  as_tibble(rownames = "mutant") %>%
+  rename("K.g.p.groups" = "groups")
+K.g.p.groups$lesion.surface<- NULL
 
 #compilation
 library(dplyr)
-K.f.groups <- dplyr::left_join(K.f.ls.groups, K.f.lc.groups, by = "mutant") 
+K.f.groups <- dplyr::left_join(K.f.ls.groups, K.f.lc.groups, by = "mutant")%>%
+  left_join(., K.f.p.groups, by = "mutant" )
 K.f.groups <- K.f.groups[order(K.f.groups$mutant),]
 write.csv2(K.f.groups, file = "K.f.groups.csv")
-K.g.groups <- dplyr::left_join(K.g.ls.groups, K.g.lc.groups, by = "mutant")
-K.g.groups <- K.g.groups[order(K.g.groups$mutant),] 
+K.g.groups <- dplyr::left_join(K.g.ls.groups, K.g.lc.groups, by = "mutant")%>%
+  left_join(., K.f.p.groups, by = "mutant" )
+K.g.groups <- K.g.p.groups[order(K.g.groups$mutant),] 
 write.csv2(K.g.groups, file = "K.g.groups.csv")
 
 # Ggplots ----

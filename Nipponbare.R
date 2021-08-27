@@ -113,9 +113,39 @@ qqline(N2$residuals)
 shapiro.test(N2$residuals)
 #0.7,  normal!!! anova stands!
 
+#check for each isolate
+NFp <- dplyr::filter(N.p, isolate == "FR13")
+NGp <- dplyr::filter(N.p, isolate == "Guy11")
+
+N3 <- aov(lesion.surface ~ mutant, data = NFp) 
+anova(N3)
+#p-value =   <2e-16 ***, significant
+#normality of residuals check
+#distrubution/normality
+par(mfrow=c(1,2))
+#Histogramme
+hist(N2$residuals)
+# Q-Q Plot
+qqnorm(N3$residuals)
+qqline(N3$residuals)
+#kind of normal looking
+shapiro.test(N3$residuals)
+
+N4 <- aov(lesion.surface ~ mutant, data = N.p) 
+anova(N4)
+#p-value =   <2e-16 ***, significant
+#normality of residuals check
+#distrubution/normality
+par(mfrow=c(1,2))
+#Histogramme
+hist(N4$residuals)
+# Q-Q Plot
+qqnorm(N4$residuals)
+qqline(N4$residuals)
+#kind of normal looking
+shapiro.test(N4$residuals)
 
 #Post-hoc 
-
 #post-hoc test Dunn
 library(FSA)
 dunnTest(lesion.surface ~ mutant, data = N.p, method ="bh")
@@ -126,43 +156,44 @@ N.p.w <- compare_means(lesion.surface ~ mutant, data = N.p, method="wilcox.test"
                         ref.group = ".all.") #issue with this code, will come back to it
 N.p.w
 
-## Compiled kruskal groups ----
+## Compiled dunn groups ----
 NF <- dplyr::filter(N, isolate == "FR13")
 NG <- dplyr::filter(N, isolate == "Guy11")
 #lesion surface kruskal groups
-library(agricolae)
-library(dplyr)
-N.f.ls.groups <- kruskal(NF$lesion.surface,
-                          NF$mutant, group = TRUE) %>%
-  .$groups %>%
-  as_tibble(rownames = "mutant") %>%
-  rename("N.f.ls.groups" = "groups")
-N.f.ls.groups$`NF$lesion.surface` <- NULL
-N.g.ls.groups <- kruskal(NG$lesion.surface,
-                          NG$mutant, group = TRUE) %>%
-  .$groups %>%
-  as_tibble(rownames = "mutant") %>%
-  rename("N.g.ls.groups" = "groups")
-N.g.ls.groups$`NG$lesion.surface` <- NULL
-
+library(rcompanion)
+nf.d = dunnTest(lesion.surface ~ mutant, data = NF, method ="bh")
+nf.d=nf.d$res
+nf.d <- cldList(comparison = nf.d$Comparison,
+        p.value    = nf.d$P.adj,
+        threshold  = 0.05)
+nf.d$MonoLetter <- NULL
+nf.d <- dplyr::rename(nf.d,"mutant" = "Group")
+ng.d = dunnTest(lesion.surface ~ mutant, data = NG, method ="bh")
+ng.d=nf.d$res
+ng.d <- cldList(comparison = ng.d$Comparison,
+                p.value    = ng.d$P.adj,
+                threshold  = 0.05)
+ng.d$MonoLetter <- NULL
+ng.d <- dplyr::rename(ng.d,"mutant" = "Group")
 
 #lesion count kruskal groups
 NFlc <- dplyr::filter(Nlc, isolate == "FR13")
 NGlc <- dplyr::filter(Nlc, isolate == "Guy11")
-library(agricolae)
-library(dplyr)
-N.f.lc.groups <- kruskal(NFlc$lesion.count,
-                          NFlc$mutant, group = TRUE) %>%
-  .$groups %>%
-  as_tibble(rownames = "mutant") %>%
-  rename("N.f.lc.groups" = "groups")
-N.f.lc.groups$`NFlc$lesion.count`<- NULL
-N.g.lc.groups <- kruskal(NGlc$lesion.count,
-                          NGlc$mutant, group = TRUE) %>%
-  .$groups %>%
-  as_tibble(rownames = "mutant") %>%
-  rename("N.g.lc.groups" = "groups")
-N.g.lc.groups$`NGlc$lesion.count` <- NULL
+library(rcompanion)
+nflc.d = dunnTest(lesion.surface ~ mutant, data = NFlc, method ="bh")
+nflc.d=nflc.d$res
+nflc.d <- cldList(comparison = nflc.d$Comparison,
+                p.value    = nflc.d$P.adj,
+                threshold  = 0.05)
+nflc.d$MonoLetter <- NULL
+nflc.d <- dplyr::rename(nflc.d,"mutant" = "Group")
+nglc.d = dunnTest(lesion.surface ~ mutant, data = NGlc, method ="bh")
+nglc.d=nglc.d$res
+nglc.d <- cldList(comparison = nglc.d$Comparison,
+                p.value    = nglc.d$P.adj,
+                threshold  = 0.05)
+nglc.d$MonoLetter <- NULL
+nglc.d <- dplyr::rename(nglc.d,"mutant" = "Group")
 
 #punch inoculation kruskal groups
 
@@ -170,28 +201,27 @@ NFp <- dplyr::filter(N.p, isolate == "FR13")
 NGp <- dplyr::filter(N.p, isolate == "Guy11")
 library(agricolae)
 library(dplyr)
-N.f.p.groups <- kruskal(NFp$lesion.surface,
-                         NFp$mutant, group = TRUE) %>%
+
+k3 <- aov(lesion.surface ~ mutant, data = NFp) 
+anova(k3)
+N.f.p.groups <- HSD.test(k3, "mutant", group = TRUE) %>%
   .$groups %>%
   as_tibble(rownames = "mutant") %>%
   rename("N.f.p.groups" = "groups")
-N.f.p.groups$`NFp$lesion.surface`<- NULL
-N.g.p.groups <- kruskal(NGp$lesion.surface,
-                         NGp$mutant, group = TRUE) %>%
+N.f.p.groups$lesion.surface<- NULL
+N.g.p.groups <-HSD.test(k4, "mutant", group = TRUE) %>%
   .$groups %>%
   as_tibble(rownames = "mutant") %>%
   rename("N.g.p.groups" = "groups")
-N.g.p.groups$`NGp$lesion.surface` <- NULL
+N.g.p.groups$lesion.surface<- NULL
 
 #compilation
 library(dplyr)
-N.f.groups <- dplyr::left_join(N.f.ls.groups, N.f.lc.groups, by = "mutant") %>%
+N.f.groups <- dplyr::left_join(nf.d, nflc.d, by = "mutant") %>%
   left_join(., N.f.p.groups, by = "mutant" )
-N.f.groups <- N.f.groups[order(N.f.groups$mutant),]
 write.csv2(N.f.groups, file = "N.f.groups.csv")
-N.g.groups <- dplyr::left_join(N.g.ls.groups, N.g.lc.groups, by = "mutant") %>%
+N.g.groups <- dplyr::left_join(ng.d, nglc.d,by = "mutant") %>%
   left_join(., N.g.p.groups, by = "mutant" )
-N.g.groups <- N.g.groups[order(N.g.groups$mutant),] 
 write.csv2(N.g.groups, file = "N.g.groups.csv")
 
 # Ggplots ----

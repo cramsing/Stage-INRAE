@@ -41,6 +41,8 @@ kruskal.test(lesion.surface ~ mutant, data = B.2) #p-value <2e-16
 #post-hoc test Dunn
 library(FSA)
 dunnTest(lesion.surface ~ mutant, data = B, method ="bh")
+
+
 # #post-hoc test Wilcoxon rank sum test
 #will allow us to easily add significance levels to our ggplots
 library(ggpubr)
