@@ -27,10 +27,12 @@ df4
 colnames(df4)
 #don't know why there is a super weird empty column. I've tried to troubleshoot it
 #but am not getting anywhere so we are just going to delete it
-df4$`image;leaf.number;leaf.surface;lesion.status;lesion.number;lesion.surface;lesion.perimeter;lesion.radius.mean;lesion.radius.sd;lesion.radius.min;lesion.radius.max;m.cx;m.cy;m.majoraxis;m.eccentricity;m.theta` <-NULL
+df4$"image;leaf.number;leaf.surface;lesion.status;lesion.number;lesion.surface;lesion.perimeter;lesion.radius.mean;lesion.radius.sd;lesion.radius.min;lesion.radius.max;m.cx;m.cy;m.majoraxis;m.eccentricity;m.theta" <-NULL
+df4$ "imageleaf.numberleaf.surfacelesion.statuslesion.numberlesion.surfacelesion.perimeterlesion.radius.meanlesion.radius.sdlesion.radius.minlesion.radius.maxm.cxm.cym.majoraxism.eccentricity" <- NULL
+df4$"image\tleaf.number\tleaf.surface\tlesion.status\tlesion.number\tlesion.surface\tlesion.perimeter\tlesion.radius.mean\tlesion.radius.sd\tlesion.radius.min\tlesion.radius.max\tm.cx\tm.cy\tm.majoraxis\tm.eccentricity\tm.theta" <- NULL
 df4$`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` <- NULL
 names(df4)[names(df4) == "image"] <- "mutant_cultivar"
-
+colnames(df4)
 df4
 
 ## Separation of cultivar and mutant 
@@ -184,7 +186,6 @@ punch <- punch[, c(5, 1, 18, 17, 2, 19, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 
 colnames(punch)
 
-punch <- na.omit(punch)
 
 
 
