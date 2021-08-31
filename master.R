@@ -745,6 +745,7 @@ anova(k6f2)
 shapiro.test(k6f2$residuals)
 #0.004125, not normal
 kruskal.test(lesion.surface ~ mutant, data = K6Fp)
+#p-value = 0.02815
 K6Gp <- dplyr::filter(K6.p, isolate == "Guy11")
 k6g2 <- aov(lesion.surface ~ mutant, data = K6Gp) 
 anova(k6g2)
@@ -1179,7 +1180,7 @@ qqline(T1$residuals)
 shapiro.test(T1$residuals)
 #4e-12, not normal
 kruskal.test(lesion.count ~ mutant, data = Tlc)
-#p 0.1083, significant
+#p 0.1083, not significant
 
 #Post-hoc 
 
