@@ -8,6 +8,8 @@
 library(dplyr)
 library(readr)
 list_files = list.files(path="E:/Data analysis/23.08.21 all lesions", full.names = TRUE)
+
+list_files = list.files(full.names = TRUE)
 a=0
 b = "All_lesions.csv"
 
@@ -185,6 +187,9 @@ colnames(rep1)#check order of column names against rep1 df
 punch <- punch[, c(5, 1, 18, 17, 2, 19, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)] 
 
 colnames(punch)
+
+#problem with a few leafs with divided lesions. will just remove the smaller parts
+punch <- subset(punch, lesion.surface > 1000) 
 
 
 

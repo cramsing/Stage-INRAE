@@ -1278,7 +1278,7 @@ ap0 <- ggplot(A.p,aes(x=factor(mutant, level = f.level_order), y=lesion.surface,
   geom_boxplot() + geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
   scale_size_continuous(range = c(0.01, 3))  + theme_minimal() 
 A.punch <- ap0 + scale_fill_manual(values = blue.palette) +
-  labs(title = "Punch inoculation lesion size", x = "Isolate", y = "Lesion size") + 
+  labs(title = "Punch inoculation lesion size", x = "Isolate", y = "Lesion size (in pixels)") + 
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) + theme(text=element_text(size=18))
 
 ggsave(filename = "A.punch.png", plot = A.punch, device = "png", height = 15, width = 35,
@@ -1292,7 +1292,7 @@ Aplot <- (Alsplot + Alcplot + A.punch) +
 ggsave(filename = "A.png", plot = Aplot, device = "png", height = 40, width = 45,
        units = "cm", dpi = 500)
 ## Bl1 ----
-#ggplot lesion size
+### ggplot lesion size ----
 BF <- dplyr::filter(B, isolate == "FR13")
 BG <- dplyr::filter(B, isolate == "Guy11")
 library(ggpubr)
@@ -1304,7 +1304,7 @@ bf.ls.p <- ggplot(BF,aes(x=factor(mutant, level = f.level_order), y=lesion.surfa
 leg.bfls <- get_legend(bf.ls.p)#get legend so we can run without the legend 
 
 BF.ls.plot <- bf.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
-  labs(title = "Spray lesion size", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
+  labs(title = "Spray lesion size", x = "Isolate", y = "Lesion size (in log10 pixels)") +
   # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() + 
   theme(legend.position = "none")+ theme(text=element_text(size=18))
@@ -1316,7 +1316,7 @@ bg.ls.p <- ggplot(BG,aes(x=factor(mutant, level = g.level_order), y=lesion.surfa
   scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000)) 
 leg.bgls <- get_legend(bg.ls.p)#get legend so we can run without the legend
 BG.ls.plot <- bg.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
-  labs(title = "Spray lesion size", x = "Isolate", y = "Lesion surface (in log10 pixels)") +   
+  labs(title = "Spray lesion size", x = "Isolate", y = "Lesion size (in log10 pixels)") +   
   #theme(axis.title.y = element_blank()) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() + 
   theme(legend.position = "none") + theme(text=element_text(size=18))
@@ -1364,13 +1364,13 @@ bf.p.p <- ggplot(BFp,aes(x=factor(mutant, level = f.level_order), y=lesion.surfa
   geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
   scale_size_continuous(range = c(0.01, 2))  + theme_minimal()
 BF.p.plot <- bf.p.p + scale_fill_manual(values = blue.palette) +
-  labs(title = "Punch inoculation lesion size", x = "Isolate", y = "Lesion surface (in pixels)") +
+  labs(title = "Punch inoculation lesion size", x = "Isolate", y = "Lesion size (in pixels)") +
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) + theme(text=element_text(size=18))
 bg.p.p <- ggplot(BGp, aes(x=factor(mutant, level = g.level_order), y=lesion.surface, fill = effector)) + geom_boxplot() + 
   geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
   scale_size_continuous(range = c(0.01, 2))  + theme_minimal()
 BG.p.plot <- bg.p.p + scale_fill_manual(values = blue.palette) +
-  labs(title = "Punch inoculation lesion size", x = "Isolate", y = "Lesion surface (in pixels)") +   
+  labs(title = "Punch inoculation lesion size", x = "Isolate", y = "Lesion size (in pixels)") +   
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) + theme(text=element_text(size=18))
 
 ggsave(filename = "Bfp.png", plot = BF.p.plot, device = "png", height = 15, width = 20,
@@ -1401,7 +1401,7 @@ K6f.ls.p <- ggplot(K6F,aes(x=factor(mutant, level = f.level_order), y=lesion.sur
   scale_y_continuous(trans = "log10", breaks = c(10, 100, 500, 1000, 5000, 10000)) 
 leg.k6fls <- get_legend(K6f.ls.p)#get legend so we can run without the legend 
 K6F.ls.plot <- K6f.ls.p + scale_colour_grey() + scale_fill_manual(values = blue.palette) +
-  labs(title = "Spray lesion size", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
+  labs(title = "Spray lesion size", x = "Isolate", y = "Lesion size (in log10 pixels)") +
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() +
   theme(legend.position = "none") + theme(text=element_text(size=18))
 
@@ -1435,7 +1435,7 @@ K6f.p.p <- ggplot(K6Fp,aes(x=factor(mutant, level = f.level_order), y=lesion.sur
   geom_jitter(aes(size = lesion.surface), show.legend = TRUE) + # jitter size by lesion surface
   scale_size_continuous(range = c(0.01, 2))  + theme_minimal() 
 K6F.p.plot <- K6f.p.p + scale_fill_manual(values = blue.palette) +
-  labs(title = "Punch inoculation lesion size", x = "Isolate", y = "Lesion surface (in pixels)") +
+  labs(title = "Punch inoculation lesion size", x = "Isolate", y = "Lesion size (in pixels)") +
   # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0)) + theme(text=element_text(size=18))
 
@@ -1457,8 +1457,8 @@ t.ls.p <- ggplot(T,aes(x=factor(mutant, level = f.level_order), y=lesion.surface
 t.ls.p <- get_legend(t.ls.p)#get legend so we can run without the legend 
 T.ls.plot <- t.ls.p + scale_color_grey() + scale_fill_manual(values = blue.palette) +
   labs(title = "Spray lesion size", x = "Isolate", y = "Lesion surface (in log10 pixels)") +
-  # theme(axis.title.y = element_blank(), axis.title.x = element_blank()) +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() + theme(text=element_text(size=18))
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +  coord_flip() + 
+  theme(text=element_text(size=18))
 
 ggsave(filename = "Tls.png", plot = T.ls.plot, device = "png", height = 20, width = 30,
        units = "cm", dpi = 500)
@@ -1482,9 +1482,7 @@ library(patchwork)
 Tplot <- (T.ls.plot/(Tlc + plot_spacer())) + plot_annotation(tag_levels = 'A') 
 ggsave(filename = "T.png", plot = Tplot, device = "png",  height = 40, width = 45,
        units = "cm", dpi = 500)
-library(patchwork)
-Tplot <- (T.ls.plot + Tlc)+ plot_layout(design = layout) + 
-  plot_annotation(tag_levels = 'A') 
+
 
 ## Susceptible ----
 ### Kasalath ----
